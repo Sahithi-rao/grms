@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load svg %}
+
+
+{% block title %}cart{% endblock %}
+
+{% block head %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet"  href="{% static 'css/cart.css'%}">
+   <script type="text/javascript" src="{% static 'js/cart.js'%}"></script>
+
+   <!-- <script src="https://code.jquery.com/jquery-2.2.4.js" charset="utf-8"></script>
+    <meta name="robots" content="noindex,follow" />-->
+
+{% endblock %}
+{% block authorised %}
+  
+  <form>
+    <div class="shopping-cart">
+      <!-- Title -->
+
+      <div class="title">
+        Shopping Bag
+      </div>
+<!--|order_by:"name"-->
+      
+      {% for i in items %}
+      <!-- Product #3 -->
+      
+      <div id="item" class="item">
+        
+
+        <div class="image">
+          <img src="{{ i.image.url}}" alt="" height="50px" width="50px" />
+        </div>
+
+        <span class="description">
+          <span>item name: {{ i.name }}</span>
+          <span > item id : <strong id="itemid">{{ i.id_no }}</strong></span>
+          <span>{{i.description}}</span>
+          <span>price :<strong id="fixedPrice" class="price" data-price="{{i.price}}" >{{i.price}}</strong></span>
+        </span>
+
+        <span class="quantity">
+          <button class="minus-btn" type="button" name="button">
+            {% svg 'minus' %}
+          </button>
+
+          <input type="text"  name="inputNumber" id="quantity" value="0">
+
+          <button id="plus" class="plus-btn" type="button" name="button">
+            {% svg 'plus' %}
+          </button>
+          <span class="total-price" id="pricevalue">0</span>
+
+        </span>
+
+        <!--<div class="total-price" id="total">0</div>-->
+      </div>
+      {% endfor %}
+    </div>
+      
+    <div class="footer">
+
+      total price<span id="finalPrice">0</span> &nbsp;&nbsp;
+      <button id="submit" type="button" class="btn btn-lg" onclick="location.href='{% url 'generate_invoice' %}'">buy</button>
+      
+    </div>
+  </form>
+  <script type="text/javascript">
+    $('.minus-btn').on('click', function(e) {
+        e.preventDefault();
+        var $this = $(this);
+        var $itemid=$this.closest('div').find('#itemid');
+        var $fixedPrice = $this.closest('div').find('#fixedPrice');
+        var $input = $this.closest('div').find('input');
+        var $price = $this.closest('div').find('#pricevalue');
+
+        var value = parseInt($input.val());
+        var price=parseInt($fixedPrice.text());
+        var itemid=parseInt($itemid.text());
+        if (value > 0) {
+          value = value - 1;
+        } else {
+          value = 0;
+        }
+        //alert(price*value);
+        $input.val(value);
+        $price.text(price*value);
+        //update();
+        update(itemid,value); 
+      
+
+      });
+
+
+      $('.plus-btn').on('click', function(e) {
+        
+        e.preventDefault();
+        var $this = $(this);
+        var $itemid=$this.closest('div').find('#itemid');
+    
+        var $fixedPrice = $this.closest('div').find('#fixedPrice');
+        var $input = $this.closest('div').find('input');
+        var $price = $this.closest('div').find('#pricevalue');
+
+        
+        
+        var value = parseInt($input.val());
+        var price=parseInt($fixedPrice.text());
+        var itemid=parseInt($itemid.text());
+        //alert(itemid);
+        //alert(price);
+        if (value < 100) {
+          value = value + 1;
+        } else {
+          value =100;
+        }
+        $input.val(value);
+        $price.text(price*value);
+        //var temp=parseInt(price*value);
+        //t=t+temp;
+
+        update(itemid,value); 
+
+      });
+
+
+      function update(itemid,value) {
+          //alert("as");
+         $.ajax({
+          type:"POST",
+          url: "{% url 'update' %}", 
+          data:{
+            'itemid':itemid,
+            'quantity':value,
+          },
+          dataType: 'json',
+          success: function(result){
+            //alert(result.row);
+
+            $("#finalPrice").text(result.row);
+          }
+        });
+
+      }
+      window.onload = function(){
+          //alert("onload");
+          
+          $.ajax({
+          type:"POST",
+          url: "{% url 'delete' %}", 
+          success: function(result){
+            //alert(result);
+            $("#finalPrice").text(result.row);
+          }
+        });
+
+      }
+    </script>
+     
+
+{% endblock %}
